@@ -1,0 +1,192 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "RDS Management API",
+        "version": "1.0.0",
+        "description": "APIs for managing AWS RDS instances, including checking status, retrieving storage size, increasing volume size, and rolling back to original size."
+    },
+    "paths": {
+        "/check-rds-status": {
+            "get": {
+                "summary": "Check the status of an RDS instance",
+                "description": "Check the current status of an RDS instance by its identifier.",
+                "operationId": "checkRdsStatus",
+                "parameters": [
+                    {
+                        "name": "db_instance_identifier",
+                        "in": "query",
+                        "description": "The unique identifier of the RDS instance.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the status of the RDS instance.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "body": {
+                                            "type": "string",
+                                            "description": "The status of the RDS instance."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. The db_instance_identifier parameter is missing or invalid."
+                    }
+                }
+            }
+        },
+        "/get-current-storage-size": {
+            "get": {
+                "summary": "Get the current storage size of an RDS instance",
+                "description": "Retrieve the current allocated storage size of an RDS instance by its identifier.",
+                "operationId": "getCurrentStorageSize",
+                "parameters": [
+                    {
+                        "name": "db_instance_identifier",
+                        "in": "query",
+                        "description": "The unique identifier of the RDS instance.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returns the current storage size of the RDS instance.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "body": {
+                                            "type": "string",
+                                            "description": "The current storage size of the RDS instance."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. The db_instance_identifier parameter is missing or invalid."
+                    }
+                }
+            }
+        },
+        "/increase-volume-size": {
+            "post": {
+                "summary": "Increase the storage size of an RDS instance",
+                "description": "Increase the allocated storage size of an RDS instance by its identifier.",
+                "operationId": "increaseVolumeSize",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "db_instance_identifier": {
+                                        "type": "string",
+                                        "description": "The unique identifier of the RDS instance."
+                                    },
+                                    "new_storage_size": {
+                                        "type": "integer",
+                                        "description": "The new storage size in GB."
+                                    }
+                                },
+                                "required": [
+                                    "db_instance_identifier",
+                                    "new_storage_size"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Initiates the process to increase the volume size of the RDS instance.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "body": {
+                                            "type": "string",
+                                            "description": "Confirmation of the initiated volume size increase."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. The db_instance_identifier or new_storage_size parameter is missing or invalid."
+                    }
+                }
+            }
+        },
+        "/rollback-to-original-size": {
+            "post": {
+                "summary": "Rollback the storage size of an RDS instance to its original size",
+                "description": "Rollback the allocated storage size of an RDS instance to its original size.",
+                "operationId": "rollbackToOriginalSize",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "db_instance_identifier": {
+                                        "type": "string",
+                                        "description": "The unique identifier of the RDS instance."
+                                    },
+                                    "old_storage_size": {
+                                        "type": "integer",
+                                        "description": "The original storage size in GB to rollback to."
+                                    }
+                                },
+                                "required": [
+                                    "db_instance_identifier",
+                                    "old_storage_size"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Initiates the process to rollback the volume size of the RDS instance.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "body": {
+                                            "type": "string",
+                                            "description": "Confirmation of the initiated rollback."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request. The db_instance_identifier or old_storage_size parameter is missing or invalid."
+                    }
+                }
+            }
+        }
+    }
+}
