@@ -261,8 +261,6 @@ else
     TERM="/dev/null"
 fi
 
-install_lambda
-exit
 echo "Process started at `date`"
 install_packages
 
