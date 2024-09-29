@@ -1,10 +1,15 @@
 #!/bin/bash
 
-export PROJ_NAME="aurora-postgresql-pgvector"
-export GITHUB_URL="https://github.com/aws-samples/"
-export PYTHON_MAJOR_VERSION="3.11"
-export PYTHON_MINOR_VERSION="9"
+export PROJ_NAME="github-dat307"
+#export GITHUB_URL="https://github.com/aws-samples/"
+export GITHUB_URL="https://github.com/ajrajkumar/"
+export PYTHON_MAJOR_VERSION="3.12"
+export PYTHON_MINOR_VERSION="1"
 export PYTHON_VERSION="${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}"
+export PGVERSION="16.3"
+export BASEDIR=${HOME}/environment/${PROJ_NAME}
+export AWS_PAGER=""
+
 
 function print_line()
 {
@@ -36,8 +41,22 @@ function install_postgresql()
     print_line
     echo "Installing Postgresql client"
     print_line
+    sudo yum install -y readline-devel zlib-devel gcc
+    if [ ! -f /usr/local/pgsql/bin/psql ] ; then
+        cd /tmp
+        wget https://ftp.postgresql.org/pub/source/v${PGVERSION}/postgresql-${PGVERSION}.tar.gz > ${TERM} 2>&1
+        tar -xvf postgresql-${PGVERSION}.tar.gz > ${TERM} 2>&1
+        cd postgresql-${PGVERSION}
+        ./configure --without-icu > ${TERM} 2>&1
+        make > ${TERM} 2>&1
+        sudo make install > ${TERM} 2>&1
+    else
+	echo "PostgreSQL already installed.. skipping"
+    fi
+
     sudo amazon-linux-extras install -y postgresql14 > ${TERM} 2>&1
     sudo yum install -y postgresql-contrib sysbench > ${TERM} 2>&1
+
 }
 
 function clone_git()
@@ -97,6 +116,7 @@ function configure_pg()
     echo "export PGVECTOR_HOST=$PGHOST" >> /home/ec2-user/.bashrc
     echo "export PGVECTOR_PORT=5432" >> /home/ec2-user/.bashrc
     echo "export PGVECTOR_DATABASE='postgres'" >> /home/ec2-user/.bashrc
+    echo "export PATH=/usr/local/pgsql/bin:\${PATH}" >> /home/ec2-user/.bashrc
 }
 
 function install_extension()
@@ -135,7 +155,7 @@ function install_c9()
 {
     print_line
     echo "Installing c9 executable"
-    npm install -g c9
+    sudo npm install -g c9
     print_line
 }
 
@@ -200,6 +220,22 @@ function check_installation()
 }
 
 
+function install_lambda()
+{
+
+    for lambda in cw-ingest-to-dynamodb idr-agent-action-group-fn api-get-active-alerts api-list-runbook-kb api-runbook-steps-action 
+	do
+		rm -rf /tmp/${lambda}
+		mkdir /tmp/${lambda}
+		cp ${BASEDIR}/src/lambda/${lambda}.py /tmp/${lambda}/index.py
+		cd /tmp/${lambda}
+	    zip -r ${lambda}.zip index.py
+		aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
+    done
+
+}
+
+
 function cp_logfile()
 {
 
@@ -225,6 +261,8 @@ else
     TERM="/dev/null"
 fi
 
+install_lambda
+exit
 echo "Process started at `date`"
 install_packages
 
@@ -239,6 +277,8 @@ print_line
 install_c9
 print_line
 install_python3
+print_line
+install_lambda
 print_line
 check_installation
 cp_logfile
