@@ -71,7 +71,7 @@ function clone_git()
 }
 
 
-function configure_pg()
+function configure_env()
 {
     #AWS_REGION=`aws configure get region`
 
@@ -100,6 +100,12 @@ function configure_pg()
     fi
     export PGUSER
 
+    export APIGWURL=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'APIGatewayURL')][].{OutputValue:OutputValue}" --output text)
+
+    export APIGWSTAGE=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'APIGatewayStage')][].{OutputValue:OutputValue}" --output text)
+
+    export APP_CLIENT_ID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'CognitoClientID')][].{OutputValue:OutputValue}" --output text)
+
     # Persist values in future terminals
     echo "export PGUSER=$PGUSER" >> /home/ec2-user/.bashrc
     echo "export PGPASSWORD='$PGPASSWORD'" >> /home/ec2-user/.bashrc
@@ -108,15 +114,10 @@ function configure_pg()
     echo "export AWSREGION=$AWS_REGION" >> /home/ec2-user/.bashrc
     echo "export PGDATABASE=postgres" >> /home/ec2-user/.bashrc
     echo "export PGPORT=5432" >> /home/ec2-user/.bashrc
-
-
-    echo "export PGVECTOR_DRIVER='psycopg2'" >> /home/ec2-user/.bashrc
-    echo "export PGVECTOR_USER=${PGUSER}" >> /home/ec2-user/.bashrc
-    echo "export PGVECTOR_PASSWORD='$PGPASSWORD'" >> /home/ec2-user/.bashrc
-    echo "export PGVECTOR_HOST=$PGHOST" >> /home/ec2-user/.bashrc
-    echo "export PGVECTOR_PORT=5432" >> /home/ec2-user/.bashrc
-    echo "export PGVECTOR_DATABASE='postgres'" >> /home/ec2-user/.bashrc
     echo "export PATH=/usr/local/pgsql/bin:\${PATH}" >> /home/ec2-user/.bashrc
+    echo "export APIGWURL=${APIGWURL}" >> /home/ec2-user/.bashrc
+    echo "export APIGWSTAGE=${APIGWSTAGE}" >> /home/ec2-user/.bashrc
+    echo "export APP_CLIENT_ID=${APP_CLIENT_ID}" >> /home/ec2-user/.bashrc
 }
 
 function install_extension()
@@ -269,7 +270,7 @@ export AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output t
  
 install_postgresql
 clone_git
-configure_pg
+configure_env
 install_extension
 print_line
 install_c9
