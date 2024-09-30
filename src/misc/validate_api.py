@@ -1,14 +1,13 @@
 import boto3
 import json
-import jwt
+#import jwt
 import requests
 import time
-from jwt.algorithms import RSAAlgorithm
+#from jwt.algorithms import RSAAlgorithm
 
-USER_POOL_ID = 'us-west-2_vv2nJADhb'
-APP_CLIENT_ID = '6at7rrcsr736fi8i4qtpkeib3f'
+APP_CLIENT_ID = '66d65ehbusdl0mitclkvaccb5p'
 REGION = 'us-west-2'
-APIGW = 'https://1i7cd8zvpl.execute-api.us-west-2.amazonaws.com'
+APIGW = 'https://am1fd2r1r0.execute-api.us-west-2.amazonaws.com'
 
 cognito_idp = boto3.client('cognito-idp', region_name=REGION)
 
@@ -49,12 +48,12 @@ def lambda_handler(event, context):
         }
 
     get_sample(token)
-    post_sample(token)
+    #post_sample(token)
 
 def get_sample(token):
     headers = {'Authorization': f'{token}', 'Content-Type': 'application/json'}
     #print(headers)
-    url = f'{APIGW}/prod/get-sample'
+    url = f'{APIGW}/prod/active-alerts'
     print (url)
     try:
        response = requests.get(url, headers = headers)
@@ -81,10 +80,11 @@ def post_sample(token):
 # Example usage
 if __name__ == "__main__":
     # This part would typically be done in your client application
-    username = "aj_rajkumar@yahoo.com"
+    #username = "aj_rajkumar@yahoo.com"
+    username = "test1@test.com"
     #username = "jrajk@amazon.com"
-    password = "We1come@1234"
-    #password = "Goodluck@76"
+    #password = "We1come@1234"
+    password = "Goodluck@76"
     
     token = authenticate_user(username, password)
     if token:

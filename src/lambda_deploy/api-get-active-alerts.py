@@ -1,6 +1,7 @@
 import json
 import boto3
 from boto3.dynamodb.conditions import Attr
+import os
 
 def lambda_handler(event, context):
     # TODO implement
@@ -9,7 +10,9 @@ def lambda_handler(event, context):
     
     # Initialize the DynamoDB client
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('cwalerttable_v1')
+    
+    tableName = os.getenv('CWALERTTABLE')
+    table  = dynamodb.Table(tableName)
 
     # Scan the table and filter based on sort key
     response = table.scan(
@@ -17,7 +20,11 @@ def lambda_handler(event, context):
     )
     print (response)
     return {
-        'statusCode': 200,
-        'body': json.dumps(response)
+        'statusCode': '200',
+        'body': json.dumps(response),
+        'headers': {
+            'Content-Type': 'application/json',
+        }
     }
-
+    
+    
