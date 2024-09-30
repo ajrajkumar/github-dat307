@@ -147,6 +147,10 @@ function install_python3()
     sudo rm -f /opt/Python-{$PYTHON_VERSION}.tgz
     pip${PYTHON_MAJOR_VERSION} install --upgrade pip  > ${TERM} 2>&1
 
+    # Installing required modules
+    
+    pip${PYTHON_MAJOR_VERSION} install boto3 psycopg2-binary requests  > ${TERM} 2>&1
+
     echo "Making this version of python as default"
     sudo rm /usr/bin/python3
     sudo ln -s /usr/local/bin/python${PYTHON_MAJOR_VERSION} /usr/bin/python3 
