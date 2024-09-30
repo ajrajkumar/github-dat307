@@ -36,6 +36,7 @@ def simple_agent_invoke(input_text):
     
     event_stream = agentResponse['completion']
     try:
+        output = []
         for event in event_stream:        
             if 'chunk' in event:
                 data = event['chunk']['bytes']
@@ -54,9 +55,11 @@ def simple_agent_invoke(input_text):
                 except KeyError:
                     pass
                 logger.info(json.dumps(a, indent=2))
+                output.append(a)
                 logger.info("\n=====================================================================================\n")
             else:
                 raise Exception("unexpected event.", event)
+        return output 
     except Exception as e:
         raise Exception("unexpected event.", e)
 
@@ -67,10 +70,14 @@ def lambda_handler(event, context):
     except KeyError:
         return { 'statusCode': 500, 'body': json.dumps('No description found in the alarm') }
     logger.info(f"Calling the function to execute the query : {action}")    
-    simple_agent_invoke(action)
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
-    }
+    output = simple_agent_invoke(action)
+    result = {"result":output}
 
+    return {
+        'statusCode': '200',
+        'body': json.dumps(result),
+        'headers': {
+            'Content-Type': 'application/json',
+        }
+    }   
+    

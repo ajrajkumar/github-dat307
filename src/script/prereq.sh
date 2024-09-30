@@ -224,18 +224,37 @@ function check_installation()
 
 }
 
+function upload_kb()
+{
+    export KBS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KnowledgeBaseS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
+
+    export KBSOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KnowledgeBaseSourceID')][].{OutputValue:OutputValue}" --output text)
+
+    export KBID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBID')][].{OutputValue:OutputValue}" --output text)
+
+    KBSOURCE=`echo ${KBSOURCEID} | awk -F'|' '{print $2}'`
+    ls -1 ${BASEDIR}/src/runbooks/*.md | while read file
+    do
+        echo "Fuile is ${file}"
+        aws s3 cp ${file} s3://${KBS3}
+    done
+
+    aws bedrock-agent start-ingestion-job --data-source-id ${KBSOURCE} --knowledge-base-id ${KBID}
+
+}
+
 
 function install_lambda()
 {
 
     for lambda in cw-ingest-to-dynamodb bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb api-post-incidents
-	do
-		rm -rf /tmp/${lambda}
-		mkdir /tmp/${lambda}
-		cp ${BASEDIR}/src/lambda_deploy/${lambda}.py /tmp/${lambda}/index.py
-		cd /tmp/${lambda}
-	    zip -r ${lambda}.zip index.py
-		aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
+    do
+        rm -rf /tmp/${lambda}
+        mkdir /tmp/${lambda}
+        cp ${BASEDIR}/src/lambda_deploy/${lambda}.py /tmp/${lambda}/index.py
+        cd /tmp/${lambda}
+        zip -r ${lambda}.zip index.py
+        aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
     done
 
 }
@@ -283,6 +302,7 @@ install_python3
 print_line
 install_lambda
 print_line
+upload_kb
 check_installation
 cp_logfile
 
