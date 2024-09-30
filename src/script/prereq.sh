@@ -228,11 +228,11 @@ function check_installation()
 function install_lambda()
 {
 
-    for lambda in cw-ingest-to-dynamodb idr-agent-action-group-fn api-get-active-alerts api-list-runbook-kb api-runbook-steps-action 
+    for lambda in cw-ingest-to-dynamodb bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb api-post-incidents
 	do
 		rm -rf /tmp/${lambda}
 		mkdir /tmp/${lambda}
-		cp ${BASEDIR}/src/lambda/${lambda}.py /tmp/${lambda}/index.py
+		cp ${BASEDIR}/src/lambda_deploy/${lambda}.py /tmp/${lambda}/index.py
 		cd /tmp/${lambda}
 	    zip -r ${lambda}.zip index.py
 		aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
