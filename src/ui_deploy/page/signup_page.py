@@ -1,7 +1,6 @@
 import streamlit as st
 import re
 from utils.cognito_handler import sign_up_user
-import time
 
 def is_valid_email(email):
     """Check if the provided email is valid using regex."""

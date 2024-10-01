@@ -1,8 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
 import os
-import boto3
-from botocore.exceptions import ClientError
 import requests
 
 load_dotenv()
@@ -11,13 +9,12 @@ APIGWSTAGE = os.getenv('APIGWSTAGE')
 AWS_REGION=os.getenv('AWS_REGION')
        
 
-def get_alerts():
+def get_incidents(incidentStatus):
     headers = {'Authorization': f"{st.session_state['token']}", 'Content-Type': 'application/json'}
-    #print(headers)
-    url = f'{APIGWURL}{APIGWSTAGE}/active-alerts'
-    print (url)
+    url = f'{APIGWURL}{APIGWSTAGE}/get-incidents'
+    #url = f'{APIGWURL}{APIGWSTAGE}/active-alerts'
     try:
-       response = requests.get(url, headers = headers)
+       response = requests.get(url,params={"incidentStatus": incidentStatus}, headers = headers)
        response.raise_for_status()
        print(response.json())
        return response.json()
@@ -30,9 +27,7 @@ def get_runbook(account_id,description):
     st.write(account_id)
     print("Calling the get_runbook")
     headers = {'Authorization': f"{st.session_state['token']}", 'Content-Type': 'application/json'}
-    #print(headers)
-    url = f'{APIGWURL}{APIGWSTAGE}/list-runbook-steps-alerts'
-    print (url)
+    url = f'{APIGWURL}{APIGWSTAGE}/get-incident-runbook'
     try:
        response = requests.get(url, params={"query": description}, headers = headers)
        response.raise_for_status()
@@ -47,7 +42,7 @@ def alert_remediate(account_id,description):
     st.write(account_id)
     print("Calling the agent to take action")
     headers = {'Authorization': f"{st.session_state['token']}", 'Content-Type': 'application/json'}
-    url = f'{APIGWURL}{APIGWSTAGE}/alert-runbook-steps-action'
+    url = f'{APIGWURL}{APIGWSTAGE}/post-incident-action'
     print (url)
     try:
        data = {'action':description}

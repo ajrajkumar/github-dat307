@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.apigw_handler import get_alerts, get_runbook, alert_remediate
+from utils.apigw_handler import get_incidents, get_runbook, alert_remediate
 from utils.init_session import reset_session
 
 def app_page():
@@ -10,15 +10,10 @@ def app_page():
             st.rerun()
         
     st.title("Incidents created")
-    st.write("Here the list of active alerts")
-    alerts = get_alerts()
-    print("I am printing the alert here ")
-    print(alerts)
-    #if alerts:
-    #    st.table(alerts['Items'])
-    
-    # # Show users table 
-    user_table = alerts['Items']
+    st.write("Here the list of active incidents")
+    incidents = get_incidents("pending")
+    user_table = incidents['Items']
+    st.dataframe(user_table)
     colms =  st.columns((1, 2, 2,1, 1,1,1,2,2))
     fields = ['alarmData', 'event_details', 'sk', "event_status","pk", "account_id","Runbook","Remediate"]
     for col, field_name in zip(colms, fields):
@@ -39,12 +34,3 @@ def app_page():
         button_remediate= col9.empty()  # create a placeholder
         runbook_action = button_runbook.button("Runbook", key=f"{data['account_id']}-rb",args=(data['account_id'],data['alarmData']['description'],), on_click=get_runbook)
         remediate_action = button_remediate.button("Remediate", key=f"{data['account_id']}-re", args=(data['account_id'],data['alarmData']['description']), on_click=alert_remediate)
-
-        #if runbook_action:
-         #   pass # do some action with row's data
-             
-
-        #if remediate_action:
-         #   pass # do some action with row's data
-            
-
