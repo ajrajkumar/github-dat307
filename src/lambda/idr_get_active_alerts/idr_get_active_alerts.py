@@ -1,6 +1,7 @@
 import json
 import boto3
 from boto3.dynamodb.conditions import Attr
+import os
 
 def lambda_handler(event, context):
     # TODO implement
@@ -9,11 +10,12 @@ def lambda_handler(event, context):
     
     # Initialize the DynamoDB client
     dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('cwalerttable_v1')
+    tableName = os.environ.get('DYNAMOTABLE', 'cwalerttable_v2')
+    table = dynamodb.Table(tableName)
 
-    # Scan the table and filter based on sort key
+    # Scan the table and filter based on sort key sk -> # SessionType: A - Incident Alert, M - User Conversation Only
     response = table.scan(
-        FilterExpression=Attr('event_status').eq('pending')
+        FilterExpression=Attr('sk').ne('D')
     )
     print (response)
     return {
