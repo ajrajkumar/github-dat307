@@ -10,7 +10,7 @@ def lambda_handler(event, context):
     
     # Initialize the DynamoDB client
     dynamodb = boto3.resource('dynamodb')
-    tableName = os.environ.get('DYNAMOTABLE', 'cwalerttable_v2')
+    tableName = os.environ.get('CWALERTTABLE', 'cwalerttable_v2')
     table = dynamodb.Table(tableName)
 
     # Scan the table and filter based on sort key sk -> # SessionType: A - Incident Alert, M - User Conversation Only

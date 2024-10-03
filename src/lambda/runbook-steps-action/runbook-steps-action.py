@@ -12,7 +12,7 @@ bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime')
 agent_id = os.environ.get('AGENTID', '2EOQS4ZE93')
 agent_alias_id = os.environ.get('AGENTALIASID', '135OAPMTED')
 dynamodb = boto3.client('dynamodb')
-tableName = os.environ.get('DYNAMOTABLE', 'cwalerttable_v2')
+tableName = os.environ.get('CWALERTTABLE', 'cwalerttable_v2')
 table = dynamodb.Table(tableName)
 
 def lambda_handler(event, context):

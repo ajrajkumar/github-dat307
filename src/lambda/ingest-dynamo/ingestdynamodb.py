@@ -10,7 +10,7 @@ def lambda_handler(event, context):
     print (event)
     print (context)
     dynamodb = boto3.client('dynamodb')
-    tableName = os.environ.get('DYNAMOTABLE', 'cwalerttable_v2')
+    tableName = os.environ.get('CWALERTTABLE', 'cwalerttable_v2')
     metricStat = {}
 
     item = {'pk':{'S': uuid.uuid4().hex }, 'sk': {'S': 'A'},
