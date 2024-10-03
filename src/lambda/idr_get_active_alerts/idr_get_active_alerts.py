@@ -1,7 +1,7 @@
 import json
 import boto3
 from boto3.dynamodb.conditions import Attr
-import
+import os
 
 def lambda_handler(event, context):
     # TODO implement
