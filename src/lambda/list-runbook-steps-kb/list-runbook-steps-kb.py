@@ -7,12 +7,9 @@ region = boto3_session.region_name
 # create a boto3 bedrock client
 bedrock_agent_runtime_client = boto3.client('bedrock-agent-runtime')
 
+model_id = os.environ.get('MODELID', "anthropic.claude-3-5-sonnet-20240620-v1:0")
 kb_id = os.environ.get('KBID', "AOTCUNBFFA")
-#print (kb_id)
 
-# declare model id for calling RetrieveAndGenerate API.
-
-model_id = "anthropic.claude-3-5-sonnet-20240620-v1:0"
 model_arn = f'arn:aws:bedrock:{region}::foundation-model/{model_id}'
 
 def retrieveAndGenerate(input, kbId, model_arn, sessionId):
