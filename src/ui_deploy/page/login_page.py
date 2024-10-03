@@ -3,6 +3,9 @@ from utils.cognito_handler import authenticate_user
 
 # Pages
 def login_page():
+    st.set_page_config(page_title="DAT307-IDR: User Login", layout="wide")
+    st.image("image/aws_logo.png",width=120)
+    st.header("DAT307 - Build a Generative AI incident detection and response system powered by Amazon Aurora")
     with st.empty().container(border=True):
         col1, _, col2 = st.columns([10,1,10])
         

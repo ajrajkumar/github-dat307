@@ -26,4 +26,5 @@ def reset_session():
     st.session_state['otp'] = ""
     st.session_state['email'] = ""
     st.session_state['password'] = ""
+    st.session_state['signup_error'] = ""
     
