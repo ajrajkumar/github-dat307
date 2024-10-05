@@ -226,20 +226,34 @@ function check_installation()
 
 function upload_kb()
 {
-    export KBS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KnowledgeBaseS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
+    export KBIDRS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
 
-    export KBSOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KnowledgeBaseSourceID')][].{OutputValue:OutputValue}" --output text)
+    export KBQAS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
 
-    export KBID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBID')][].{OutputValue:OutputValue}" --output text)
+    export KBIDRSOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRSourceID')][].{OutputValue:OutputValue}" --output text)
 
-    KBSOURCE=`echo ${KBSOURCEID} | awk -F'|' '{print $2}'`
+    export KBQASOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAourceID')][].{OutputValue:OutputValue}" --output text)
+
+    export KBIDRID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRID')][].{OutputValue:OutputValue}" --output text)
+
+    export KBQAID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAID')][].{OutputValue:OutputValue}" --output text)
+
+    KBIDRSOURCE=`echo ${KBIDRSOURCEID} | awk -F'|' '{print $2}'`
     ls -1 ${BASEDIR}/src/runbooks/*.md | while read file
     do
         echo "Fuile is ${file}"
-        aws s3 cp ${file} s3://${KBS3}
+        aws s3 cp ${file} s3://${KBIDRS3}
     done
 
-    aws bedrock-agent start-ingestion-job --data-source-id ${KBSOURCE} --knowledge-base-id ${KBID}
+    KBQASOURCE=`echo ${KBQASOURCEID} | awk -F'|' '{print $2}'`
+    ls -1 ${BASEDIR}/src/docs/*.pdf | while read file
+    do
+        echo "Fuile is ${file}"
+        aws s3 cp ${file} s3://${KBQAS3}
+    done
+
+    aws bedrock-agent start-ingestion-job --data-source-id ${KBIDRSOURCE} --knowledge-base-id ${KBIDRID}
+    aws bedrock-agent start-ingestion-job --data-source-id ${KBQASOURCE} --knowledge-base-id ${KBQAID}
 
 }
 
@@ -247,7 +261,7 @@ function upload_kb()
 function install_lambda()
 {
 
-    for lambda in cw-ingest-to-dynamodb bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb api-post-incidents
+    for lambda in cw-ingest-to-dynamodb idr-bedrock-agent-action-group qa-bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb api-post-incidents
     do
         rm -rf /tmp/${lambda}
         mkdir /tmp/${lambda}
@@ -259,10 +273,8 @@ function install_lambda()
 
 }
 
-
 function cp_logfile()
 {
-
     bucket_name="genai-pgv-labs-${AWS_ACCOUNT_ID}-`date +%s`"
     echo ${bucket_name}
     aws s3 ls | grep ${bucket_name} > /dev/null 2>&1
