@@ -106,6 +106,9 @@ function configure_env()
 
     export APP_CLIENT_ID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'CognitoClientID')][].{OutputValue:OutputValue}" --output text)
 
+
+    export C9_URL="https://${C9_PID}.vfs.cloud9.$AWS_REGION.amazonaws.com/"
+
     # Persist values in future terminals
     echo "export PGUSER=$PGUSER" >> /home/ec2-user/.bashrc
     echo "export PGPASSWORD='$PGPASSWORD'" >> /home/ec2-user/.bashrc
@@ -118,6 +121,7 @@ function configure_env()
     echo "export APIGWURL=${APIGWURL}" >> /home/ec2-user/.bashrc
     echo "export APIGWSTAGE=${APIGWSTAGE}" >> /home/ec2-user/.bashrc
     echo "export APP_CLIENT_ID=${APP_CLIENT_ID}" >> /home/ec2-user/.bashrc
+    echo "export C9_URL=${C9_URL}" >> /home/ec2-user/.bashrc
 }
 
 function install_extension()
@@ -232,28 +236,30 @@ function upload_kb()
 
     export KBIDRSOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRSourceID')][].{OutputValue:OutputValue}" --output text)
 
-    export KBQASOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAourceID')][].{OutputValue:OutputValue}" --output text)
+    export KBQASOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQASourceID')][].{OutputValue:OutputValue}" --output text)
 
     export KBIDRID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRID')][].{OutputValue:OutputValue}" --output text)
 
     export KBQAID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAID')][].{OutputValue:OutputValue}" --output text)
 
     KBIDRSOURCE=`echo ${KBIDRSOURCEID} | awk -F'|' '{print $2}'`
-    ls -1 ${BASEDIR}/src/runbooks/*.md | while read file
+    ls -1 ${BASEDIR}/src/kb/runbooks/*.md | while read file
     do
-        echo "Fuile is ${file}"
-        aws s3 cp ${file} s3://${KBIDRS3}
+        echo "File is ${file}"
+        aws s3 cp "${file}" s3://${KBIDRS3}
     done
 
     KBQASOURCE=`echo ${KBQASOURCEID} | awk -F'|' '{print $2}'`
-    ls -1 ${BASEDIR}/src/docs/*.pdf | while read file
+    ls -1 ${BASEDIR}/src/kb/documents/*.pdf | while read file
     do
-        echo "Fuile is ${file}"
-        aws s3 cp ${file} s3://${KBQAS3}
+        echo "File is ${file}"
+        aws s3 cp "${file}" s3://${KBQAS3}
     done
 
     aws bedrock-agent start-ingestion-job --data-source-id ${KBIDRSOURCE} --knowledge-base-id ${KBIDRID}
+    echo "aws bedrock-agent start-ingestion-job --data-source-id ${KBIDRSOURCE} --knowledge-base-id ${KBIDRID}"
     aws bedrock-agent start-ingestion-job --data-source-id ${KBQASOURCE} --knowledge-base-id ${KBQAID}
+    echo "aws bedrock-agent start-ingestion-job --data-source-id ${KBQASOURCE} --knowledge-base-id ${KBQAID}"
 
 }
 

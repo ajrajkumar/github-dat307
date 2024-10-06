@@ -8,6 +8,7 @@ import uuid
 import pprint
 import logging
 import os
+from datetime import datetime
 
 boto3_session = boto3.session.Session()
 region = boto3_session.region_name
@@ -63,15 +64,36 @@ def simple_agent_invoke(input_text):
     except Exception as e:
         raise Exception("unexpected event.", e)
 
+def update_dynamodb(id, username, result):
+
+    dynamodb = boto3.client('dynamodb')
+    tableName = os.environ.get('CWALERTTABLE', 'cwalerttable_v2')
+    key = {"pk": {'S': id}, 'sk': {'S': 'I' } }
+    response = dynamodb.update_item(
+        TableName = tableName,
+        Key=key, 
+        UpdateExpression = "set incidentActionTrace = :incidentActionTrace, lastUpdate = :lastUpdate, lastUpdateBy = :lastUpdateBy, incidentStatus = :incidentStatus", 
+        ExpressionAttributeValues={
+            ":incidentActionTrace": {'S': json.dumps(result) },
+            ":incidentStatus": {'S': 'completed'},
+            ":lastUpdate": {'S' : datetime.now().strftime("%Y-%m-%d %H:%M:%S") }, 
+            ":lastUpdateBy": {'S': username }
+            }, 
+        ReturnValues="UPDATED_NEW",
+        )
+
 def lambda_handler(event, context):
     logger.info(event)
     try:
         action = json.loads(event['body'])['action']
+        id = json.loads(event['body'])['id']
     except KeyError:
         return { 'statusCode': 500, 'body': json.dumps('No description found in the alarm') }
     logger.info(f"Calling the function to execute the query : {action}")    
+    username = event.get('requestContext',{}).get('authorizer',{}).get('claims', {}).get('email')
     output = simple_agent_invoke(action)
     result = {"result":output}
+    update_dynamodb(id, username, result)
 
     return {
         'statusCode': '200',
@@ -81,3 +103,4 @@ def lambda_handler(event, context):
         }
     }   
     
+

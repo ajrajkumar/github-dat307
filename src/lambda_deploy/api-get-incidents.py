@@ -4,19 +4,24 @@ from boto3.dynamodb.conditions import Attr
 import os
 
 def lambda_handler(event, context):
-    # TODO implement
     print (event)
-    print (context)
-    
+    incidentStatus = None
+    try:
+        incidentStatus = event['queryStringParameters']['incidentStatus']
+    except KeyError:
+        return { 'statusCode': 500, 'body': json.dumps('No status found in the alarm') }
+        
     # Initialize the DynamoDB client
     dynamodb = boto3.resource('dynamodb')
     
     tableName = os.getenv('CWALERTTABLE')
     table  = dynamodb.Table(tableName)
+    
+    print(f"Getting the DynamoDB table {tableName}  content for incidentStatus {incidentStatus}")
 
-    # Scan the table and filter based on sort key
+    # Getting the incidents for the sort key ("I")
     response = table.scan(
-        FilterExpression=Attr('event_status').eq('pending')
+        FilterExpression=Attr('incidentStatus').eq(incidentStatus) & Attr('sk').eq('I')
     )
     print (response)
     return {

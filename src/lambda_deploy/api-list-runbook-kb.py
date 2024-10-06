@@ -5,6 +5,7 @@ import logging
 from botocore.exceptions import ClientError
 from botocore.client import Config
 import os
+from datetime import datetime
 
 # Define FM to be used for generations 
 kb_id = os.getenv('KBID')
@@ -13,10 +14,6 @@ sts_client = boto3.client('sts')
 boto3_session = boto3.session.Session()
 model_id = "anthropic.claude-3-haiku-20240307-v1:0" # we will be using Anthropic Claude 3 Haiku throughout the notebook
 model_arn = f'arn:aws:bedrock:{region_name}::foundation-model/{model_id}'
-
-print(kb_id)
-print(model_arn)
-print(region_name) 
 
 bedrock_config = Config(connect_timeout=120, read_timeout=120, retries={'max_attempts': 0}, region_name=region_name)
 bedrock_agent_client = boto3_session.client("bedrock-agent-runtime", config=bedrock_config)
@@ -65,19 +62,41 @@ def retrieve_and_generate(query, max_results, prompt_template=default_prompt):
         }
     )
     return response
-    
+
+def update_dynamodb(id, username, output):
+
+    dynamodb = boto3.client('dynamodb')
+    tableName = os.environ.get('CWALERTTABLE', 'cwalerttable_v2')
+    key = {"pk": {'S': id}, 'sk': {'S': 'I' } }
+    response = dynamodb.update_item(
+        TableName = tableName,
+        Key=key, 
+        UpdateExpression = "set incidentRunbook = :incidentRunbook, lastUpdate = :lastUpdate, lastUpdateBy = :lastUpdateBy", 
+        ExpressionAttributeValues={
+            ":incidentRunbook": {'S': json.dumps(output) },
+            ":lastUpdate": {'S' : datetime.now().strftime("%Y-%m-%d %H:%M:%S") }, 
+            ":lastUpdateBy": {'S': username }
+            }, 
+        ReturnValues="UPDATED_NEW",
+        )
+
 
 def lambda_handler(event, context):
     print(event)
     try:
         query = event['queryStringParameters']['query']
+        id = event['queryStringParameters']['id']
     except KeyError:
         return { 'statusCode': 500, 'body': json.dumps('No description found in the alarm') }
    
+    username = event.get('requestContext',{}).get('authorizer',{}).get('claims', {}).get('email')
+
     print(f"Calling the function to execute the query : {query}")    
     response = retrieve_and_generate(query = query, max_results = 1)
     generated_text = response['output']['text']
     output = {"runbook": generated_text}
+    
+    update_dynamodb(id, username, output)
     print('Generated FM response:\n')
     print(generated_text)
     return {
@@ -87,4 +106,5 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json',
         }
     }
+
 

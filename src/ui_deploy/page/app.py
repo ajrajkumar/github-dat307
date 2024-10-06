@@ -31,11 +31,10 @@ def get_kpi(iconname, metricname, metricvalue):
 def app_page():
     incidents = get_incidents("pending")
     dfall = pd.DataFrame(incidents['Items'])   
-    df = dfall.drop('alarmData', axis=1)
-    df = df.drop('account_id', axis=1)
+    df = dfall.drop('incidentData', axis=1)
     # Get additional attributes from Alarm payload
-    df['alert_type'] = dfall['alarmData'].str['name']
-    df['db_instance'] = dfall['alarmData'].str['DBInstanceIdentifier']  
+    df['alert_type'] = dfall['incidentType']
+    df['db_instance'] = dfall['incidentIdentifier']
     
     eventCount = str(incidents['Count'])
     instanceCount =  str(df['db_instance'].nunique())
@@ -99,7 +98,7 @@ def app_page():
     if len(rows) != 0:
         print(dfall)
         pk = dfall.iloc[rows[0]]['pk']
-        description = dfall.iloc[rows[0]]['alarmData']['description']
+        description = json.loads(dfall.iloc[rows[0]]['incidentData'])['configuration']['description']
         print(pk)
         col4.json(dfall.iloc[rows[0]].to_json(orient='records'))
         
