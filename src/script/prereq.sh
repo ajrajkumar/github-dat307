@@ -267,7 +267,7 @@ function upload_kb()
 function install_lambda()
 {
 
-    for lambda in cw-ingest-to-dynamodb idr-bedrock-agent-action-group qa-bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb api-post-incidents
+    for lambda in cw-ingest-to-dynamodb idr-bedrock-agent-action-group qa-bedrock-agent-action-group api-get-incidents api-list-runbook-kb api-action-runbook-kb
     do
         rm -rf /tmp/${lambda}
         mkdir /tmp/${lambda}

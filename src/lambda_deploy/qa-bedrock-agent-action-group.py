@@ -6,6 +6,7 @@ import traceback
 from botocore.client import Config
 import datetime
 from datetime import datetime, timedelta
+from boto3.dynamodb.conditions import Attr
 
 config = Config(connect_timeout=5, retries={'max_attempts': 0})
 
@@ -55,24 +56,6 @@ def build_api_response(event, status_code, response_message):
 
     return api_response
 
-def get_instance_details_helper(db_instance_identifier):
-    try:
-        response = rdsClient.describe_db_instances(DBInstanceIdentifier=db_instance_identifier)
-        return response['DBInstances'][0]
-    except Exception as e:
-        lambda_logger.error(f"Unable to get the instance details: {str(e)}")
-        lambda_logger.error(traceback.format_exc())
-        return  f"Error: {str(e)}"
-
-def get_all_instance_details_helper():
-    try:
-        response = rdsClient.describe_db_instances()
-        return response['DBInstances']
-    except Exception as e:
-        lambda_logger.error(f"Unable to get the instance details: {str(e)}")
-        lambda_logger.error(traceback.format_exc())
-        return  f"Error: {str(e)}"
-    
 def get_cluster_details_helper(dbClusterName):
     try:
         response = rdsClient.describe_db_clusters(DBClusterIdentifier=dbClusterName)
@@ -97,25 +80,11 @@ def get_cluster_name(db_instance_identifier):
     
 # Action group functions
 
-
-def get_instance_details(db_instance_identifier):
-    """
-      Function to retrieve the instance details of RDS Cluster. Output will be in json format 
-    """
-    try:
-        response = get_all_instance_details_helper()
-        return json.dumps(response, indent=4, sort_keys=True, default=str)
-    except Exception as e:
-        lambda_logger.error(f"Unable to get the instance details: {str(e)}")
-        lambda_logger.error(traceback.format_exc())
-        return  f"Error: {str(e)}"
-
 def gather_infra():
     """
       Function to retrieve the instance details of RDS Cluster. Output will be in json format 
     """
     try:
-        
         response = rdsClient.describe_db_instances()
         output = []
         
@@ -133,9 +102,38 @@ def gather_infra():
                     "PendingReboot" : pending_reboot,
                     "MultiAZ" : instance["MultiAZ"]
                 })
-        return json.dumps(output, indent=4, sort_keys=True, default=str)
+        return json.dumps(output, indent=2, sort_keys=True, default=str)
     except Exception as e:
         lambda_logger.error(f"Unable to get the instance details: {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}"
+
+def gather_incidents():
+    """
+      Function to retrieve the incident details of RDS Cluster. Output will be in json format 
+    """
+    try:
+        output = []
+        dynamodb = boto3.resource('dynamodb')
+        tableName = os.getenv('CWALERTTABLE')
+        table  = dynamodb.Table(tableName)
+
+        # Getting the incidents for the sort key ("I")
+        response = table.scan(
+            FilterExpression= Attr('sk').eq('I')
+        )
+        print(response)
+
+        for item in response['Items']:
+            output.append(
+                {   "IncidentIdentifier" : item['incidentIdentifier'],
+                    "IncidentType" : item['incidentType'],
+                    "IncidentStatus" : item['incidentStatus'],
+                    "ResolvedBy" : item['lastUpdateBy'],
+                    "ResolvedAt" : item['lastUpdate'] })
+        return json.dumps(output, indent=2, sort_keys=True, default=str)
+    except Exception as e:
+        lambda_logger.error(f"Unable to get the incident details: {str(e)}")
         lambda_logger.error(traceback.format_exc())
         return  f"Error: {str(e)}"
 
@@ -279,7 +277,9 @@ def lambda_handler(event, context):
 
         if function == "gather_infra":
             responseMessage = gather_infra()
-
+            
+        if function == "gather_incidents":
+            responseMessage = gather_incidents()
 
         lambda_logger.info(f"Response: {responseMessage}")
         return build_api_response(event, 200, str(responseMessage))
@@ -288,4 +288,3 @@ def lambda_handler(event, context):
         lambda_logger.error(f"Error handling request: {str(e)}")
         lambda_logger.error(traceback.format_exc())
         return build_api_response(event, 500, f"Error: {str(e)}")
-
