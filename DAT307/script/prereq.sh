@@ -1,8 +1,10 @@
 #!/bin/bash
 
-export PROJ_NAME="aurora-postgresql-pgvector"
+
+export PROJ_NAME="DAT307"
+#export GITHUB_NAME="aurora-postgresql-pgvector"
 #export GITHUB_URL="https://github.com/aws-samples/"
-export PROJ_NAME="github-dat307"
+export GITHUB_NAME="github-dat307"
 export GITHUB_URL="https://github.com/ajrajkumar/"
 export PYTHON_MAJOR_VERSION="3.12"
 export PYTHON_MINOR_VERSION="1"
@@ -66,7 +68,9 @@ function clone_git()
     echo "Cloning the git repository"
     print_line
     cd ${HOME}/environment
-    git clone ${GITHUB_URL}${PROJ_NAME}
+    git clone ${GITHUB_URL}${GITHUB_NAME}
+    mv ${GITHUB_NAME}/${PROJ_NAME}  ${HOME}/environment
+    rm -rf ${GITHUB_NAME}
     cd ${PROJ_NAME}
     print_line
 }
@@ -232,26 +236,21 @@ function check_installation()
 function upload_kb()
 {
     export KBIDRS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
-
     export KBQAS3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
-
     export KBIDRSOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRSourceID')][].{OutputValue:OutputValue}" --output text)
-
     export KBQASOURCEID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQASourceID')][].{OutputValue:OutputValue}" --output text)
-
     export KBIDRID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRID')][].{OutputValue:OutputValue}" --output text)
-
     export KBQAID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAID')][].{OutputValue:OutputValue}" --output text)
 
     KBIDRSOURCE=`echo ${KBIDRSOURCEID} | awk -F'|' '{print $2}'`
-    ls -1 ${BASEDIR}/src/kb/runbooks/*.md | while read file
+    ls -1 ${BASEDIR}/knowledge-base/runbooks/*.md | while read file
     do
         echo "File is ${file}"
         aws s3 cp "${file}" s3://${KBIDRS3}
     done
 
     KBQASOURCE=`echo ${KBQASOURCEID} | awk -F'|' '{print $2}'`
-    ls -1 ${BASEDIR}/src/kb/documents/*.pdf | while read file
+    ls -1 ${BASEDIR}/knowledge-base/documents/*.pdf | while read file
     do
         echo "File is ${file}"
         aws s3 cp "${file}" s3://${KBQAS3}
@@ -272,7 +271,7 @@ function install_lambda()
     do
         rm -rf /tmp/${lambda}
         mkdir /tmp/${lambda}
-        cp ${BASEDIR}/src/lambda/${lambda}.py /tmp/${lambda}/index.py
+        cp ${BASEDIR}/lambda/${lambda}.py /tmp/${lambda}/index.py
         cd /tmp/${lambda}
         zip -r ${lambda}.zip index.py
         aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
@@ -321,7 +320,8 @@ install_python3
 print_line
 install_lambda
 print_line
-upload_kb
+# KB will be uploaded by the participants
+#upload_kb
 check_installation
 cp_logfile
 
