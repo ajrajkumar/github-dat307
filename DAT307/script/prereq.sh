@@ -106,11 +106,11 @@ function configure_env()
     export PGUSER
 
     export APIGWURL=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'APIGatewayURL')][].{OutputValue:OutputValue}" --output text)
-
     export APIGWSTAGE=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'APIGatewayStage')][].{OutputValue:OutputValue}" --output text)
-
     export APP_CLIENT_ID=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'CognitoClientID')][].{OutputValue:OutputValue}" --output text)
 
+    export KB_IDR_S3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
+    export KB_QA_S3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
 
     export C9_URL="https://${C9_PID}.vfs.cloud9.$AWS_REGION.amazonaws.com/"
 
@@ -127,6 +127,8 @@ function configure_env()
     echo "export APIGWSTAGE=${APIGWSTAGE}" >> /home/ec2-user/.bashrc
     echo "export APP_CLIENT_ID=${APP_CLIENT_ID}" >> /home/ec2-user/.bashrc
     echo "export C9_URL=${C9_URL}" >> /home/ec2-user/.bashrc
+    echo "export KB_IDR_S3=${KB_IDR_S3}" >> /home/ec2-user/.bashrc
+    echo "export KB_QA_S3=${KB_QA_S3}" >> /home/ec2-user/.bashrc
 }
 
 function install_extension()
