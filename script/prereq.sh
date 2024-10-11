@@ -271,7 +271,7 @@ function install_lambda()
     do
         rm -rf /tmp/${lambda}
         mkdir /tmp/${lambda}
-        cp ${BASEDIR}/src/lambda_deploy/${lambda}.py /tmp/${lambda}/index.py
+        cp ${BASEDIR}/src/lambda/${lambda}.py /tmp/${lambda}/index.py
         cd /tmp/${lambda}
         zip -r ${lambda}.zip index.py
         aws lambda update-function-code --function-name  ${lambda}  --zip-file fileb:///tmp/${lambda}/${lambda}.zip
