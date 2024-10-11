@@ -14,4 +14,4 @@ Follow the instrctions in this run book to remediate the issues related to the l
 
 2. Get the current CPU utilization metrics for the last 1 hour for the RDS instance. . 
 
-3. Check if the maximum CPU utilization from the CPU metrics is above 80% , then scale up the RDS instance. If it is below 80% then scale up the RDS instance. 
+3. Check if the maximum CPU utilization from the CPU metrics is above 80% , then scale up the RDS instance to the next availabe instance type.

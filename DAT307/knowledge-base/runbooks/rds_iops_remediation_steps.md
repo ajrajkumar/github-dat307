@@ -16,4 +16,4 @@ Follow the instrctions in this run book to remediate the issues related to the i
 
 3. Get the provisioned iops of the RDS instance. 
 
-4. Check if the maximum IOPS utilization from the IOPS metrics is 80% of the provisioned IOPS then increase it by 20%, if it is less than 80%  increase it by 10%.
+4. Check if the maximum IOPS utilization from the IOPS metrics is 80% of the provisioned IOPS then increase it by 20%.

@@ -16,7 +16,4 @@ Follow the instrctions in this run book to remediate the issues related to the S
 
 3. Get the current ACU utilization metrics for the last 1 hour for the Aurora instance.
 
-4. Check if the maximum ACU utilization from the ACU metrics is above 80% , then increase the max ACU by 20% or increase the max ACU by 30%.
-
-
-
+4. Check if the maximum ACU utilization from the ACU metrics is above 80% , then increase the max ACU by 20%.
