@@ -117,7 +117,27 @@ def get_instance_details_helper(db_instance_identifier):
         lambda_logger.error(f"Unable to get the instance details: {str(e)}")
         lambda_logger.error(traceback.format_exc())
         return  f"Error: {str(e)}"
-    
+        
+def get_cluster_details_helper(dbClusterName):
+    try:
+        response = rdsClient.describe_db_clusters(DBClusterIdentifier=dbClusterName)
+        return response['DBClusters'][0]
+    except Exception as e:
+        lambda_logger.error(f"Unable to get the instance details: {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}"
+        
+def get_cluster_name(db_instance_identifier):
+    try:
+        response = get_instance_details_helper(db_instance_identifier)
+        dbClusterName =  response['DBClusterIdentifier']
+        return dbClusterName
+    except Exception as e:
+        lambda_logger.error(f"Unable to get the cluster identifier details: {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}"
+
+
 def get_max_acu_helper(db_instance_identifier):
     try:
         dbClusterName = get_cluster_name(db_instance_identifier)
@@ -127,7 +147,8 @@ def get_max_acu_helper(db_instance_identifier):
     except Exception as e:
         lambda_logger.error(f"Unable to get the cluster maxACU details: {str(e)}")
         lambda_logger.error(traceback.format_exc())
-        return  f"Error: {str(e)}" 
+        return  f"Error: {str(e)}"    
+
 #==============================================================================================================================            
     
 # Action group functions
@@ -468,7 +489,7 @@ def get_acu_metrics(db_instance_identifier, metric_time):
                 'MetricStat': {
                     'Metric': {
                         'Namespace': 'AWS/RDS',
-                        'MetricName': 'ServerlessDatabaseCapacity',
+                        'MetricName': 'ACUUtilization',
                         'Dimensions': [
                             {
                                 'Name': 'DBInstanceIdentifier',
@@ -603,5 +624,4 @@ def lambda_handler(event, context):
         lambda_logger.error(f"Error handling request: {str(e)}")
         lambda_logger.error(traceback.format_exc())
         return build_api_response(event, 500, f"Error: {str(e)}")
-
 
