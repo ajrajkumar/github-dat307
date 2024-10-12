@@ -436,8 +436,68 @@ def increase_iops(db_instance_identifier, percent_increase):
         return  f"Error: {str(e)}"
 
 #-- Add function definition here ---
+def get_max_acu(db_instance_identifier):
+    try:
+        maxACU = get_max_acu_helper(db_instance_identifier)
+        message = f"Max ACU utilization of the instance {db_instance_identifier} is {maxACU}"
+        lambda_logger.info(message)
+        return message
+    except Exception as e:
+        lambda_logger.error(f"Unable to get the maxACU instance class : {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}"  
 
-#-- End of function defintion ---
+def get_acu_metrics(db_instance_identifier, metric_time):
+    start_date =  datetime.utcnow() - timedelta(hours=int(metric_time))
+    end_date = datetime.utcnow()
+    period = int(metric_time)*60*60 
+    response = cloudwatchClient.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/RDS',
+                        'MetricName': 'ServerlessDatabaseCapacity',
+                        'Dimensions': [
+                            {
+                                'Name': 'DBInstanceIdentifier',
+                                'Value': db_instance_identifier
+                            },
+                        ]
+                    },
+                    'Period': period,
+                    'Stat': 'Maximum'
+                }
+            },
+        ],
+        StartTime=start_date, 
+        EndTime=end_date,    
+    )
+    metric_value = int(response["MetricDataResults"][0]['Values'][0])
+    return f"Maximum ACU utilization is {metric_value}"
+    
+def increase_acu(db_instance_identifier, percent_increase):
+    try:
+        maxACU = get_max_acu_helper(db_instance_identifier)
+        newMaxACU = maxACU + int(maxACU*int(percent_increase)/100)
+        if maxACU == newMaxACU:
+            newMaxACU = newMaxACU + 1
+        dbClusterName = get_cluster_name(db_instance_identifier)
+        lambda_logger.info(f"Going to increase the maxACU to {newMaxACU} for the cluster {dbClusterName}")
+        modResponse = rdsClient.modify_db_cluster(
+            DBClusterIdentifier=dbClusterName,
+            ServerlessV2ScalingConfiguration={
+                'MaxCapacity': newMaxACU
+             },
+            ApplyImmediately = True)
+        lambda_logger.info(modResponse)
+        return f"Submitted the request to increase maxACU to {newMaxACU} by {percent_increase}%"
+    except Exception as e:
+        lambda_logger.error(f"Unable to increase the maxACU : {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}"
+#-- End of function defintion ----
 #==============================================================================================================================            
 
 def lambda_handler(event, context):
@@ -511,7 +571,19 @@ def lambda_handler(event, context):
             responseMessage = get_environment_tag(db_instance_identifier)
 
 #-- Add function call here ---
+        if function == "increase_acu":
+            db_instance_identifier = get_param(parameters, "db_instance_identifier")
+            percent_increase = get_param(parameters, "percent_increase")
+            responseMessage = increase_acu(db_instance_identifier,percent_increase)
 
+        if function == "get_max_acu":
+            db_instance_identifier = get_param(parameters, "db_instance_identifier")
+            responseMessage = get_max_acu(db_instance_identifier)
+            
+        if function == "get_acu_metrics":
+            db_instance_identifier = get_param(parameters, "db_instance_identifier")
+            metric_time = get_param(parameters, "metric_time")
+            responseMessage = get_acu_metrics(db_instance_identifier,metric_time)
 #-- End of function call ---
 
         lambda_logger.info(f"Response: {responseMessage}")
