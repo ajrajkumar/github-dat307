@@ -118,6 +118,16 @@ def get_instance_details_helper(db_instance_identifier):
         lambda_logger.error(traceback.format_exc())
         return  f"Error: {str(e)}"
     
+def get_max_acu_helper(db_instance_identifier):
+    try:
+        dbClusterName = get_cluster_name(db_instance_identifier)
+        clusterResponse = get_cluster_details_helper(dbClusterName)
+        maxACU = clusterResponse['ServerlessV2ScalingConfiguration']['MaxCapacity']
+        return maxACU
+    except Exception as e:
+        lambda_logger.error(f"Unable to get the cluster maxACU details: {str(e)}")
+        lambda_logger.error(traceback.format_exc())
+        return  f"Error: {str(e)}" 
 #==============================================================================================================================            
     
 # Action group functions
