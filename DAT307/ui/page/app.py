@@ -30,18 +30,15 @@ def get_kpi(iconname, metricname, metricvalue):
 
 def app_page():
     incidents = get_incidents("pending")
-    dfall = pd.DataFrame(incidents['Items'])   
-    df = dfall.drop('incidentData', axis=1)
-    # Get additional attributes from Alarm payload
-    df['alert_type'] = dfall['incidentType']
-    df['db_instance'] = dfall['incidentIdentifier']
+    if len(incidents) == 0 :
+        dfall = pd.DataFrame(columns=["incidentActionTrace","incidentData","incidentStatus","incidentIdentifier","incidentRunbook","incidentTime","sk","incidentType","lastUpdateBy","pk","lastUpdate"])
+    else:
+        dfall = pd.DataFrame(incidents)   
+
+    eventCount = len(incidents)
+    instanceCount =  str(dfall['incidentIdentifier'].nunique())
+    alertTypeCount =  str(dfall['incidentType'].nunique())
     
-    eventCount = str(incidents['Count'])
-    instanceCount =  str(df['db_instance'].nunique())
-    alertTypeCount =  str(df['alert_type'].nunique())
-    
-    print("incident output")
-    print(incidents)    
     st.set_page_config(page_title="DAT307-IDR: Amazon RDS Incidents", layout="wide")
     
     with st.sidebar:
@@ -66,27 +63,28 @@ def app_page():
     col2.markdown(get_kpi("fa-solid fa-server","Total Unique Instance",instanceCount), unsafe_allow_html=True)
     col3.markdown(get_kpi("fa-solid fa-bell","Total Unique Alert Type",alertTypeCount), unsafe_allow_html=True)
     
-    col4, col5 = st.columns(2)
+    col4, col5 = st.columns([3,1])
     col4.markdown("#### Event Summary")
     col4.write("Here are the list of active incidents")
     col4.write("Please select an incident to process by clicking the first column of the row")
     
     print("Display table output")
-    print(df)
-    event = col4.dataframe(df,
+    print(dfall)
+    event = col4.dataframe(dfall,
                              on_select="rerun",
                              selection_mode="single-row",
                              hide_index=True,
                              column_config={
-                             "alert_type": "Alert Type",
+                             "incidentType": "Incident Type",
                              "pk": "Session ID",
-                             "db_instance": "Database Instance",
-                             "event_status": "Event Status"
+                             "incidentIdentifier": "Database Instance",
+                             "incidentStatus": "Incident Status",
+                             "incidentTime": "Incident Time"
                             },
-                            column_order=("pk","db_instance","alert_type","event_status")
+                            column_order=("pk","incidentIdentifier","incidentType","incidentStatus","incidentTime")
     )
-    col4.markdown("#### Event Details")
-    col4.divider()
+    #col4.markdown("#### Event Details")
+    #col4.divider()
     col5.markdown("#### User Action")
     col5.write("Here are the actions that requires manual user intervention")
     runbook_action = col5.button("Get Runbook")
@@ -100,23 +98,23 @@ def app_page():
         pk = dfall.iloc[rows[0]]['pk']
         description = json.loads(dfall.iloc[rows[0]]['incidentData'])['configuration']['description']
         print(pk)
-        col4.json(dfall.iloc[rows[0]].to_json(orient='records'))
-        
+        #col4.json(dfall.iloc[rows[0]].to_json(orient='records'))
  
     if runbook_action:
         if pk is None:
-            col5.error("Please select an incident to get the runbook for the incident")
+            col4.error("Please select an incident to get the runbook for the incident")
             return
-        with col5.status("Retrieving incident runbook..."):
+        with col4.status("Retrieving incident runbook..."):
             runbook = get_runbook(pk,description)
-            col5.markdown("***Runbook Instructions for " + pk + "***")
-            col5.text_area("Runbook Instructions", runbook['runbook'],height=1000, label_visibility="hidden")
+            col4.markdown("***Runbook Instructions for " + pk + "***")
+            col4.text_area("Runbook Instructions", runbook['runbook'],height=200, label_visibility="hidden")
 
     if remediate_action:
         if pk is None:
-            col5.error("Please select an incident to auto-remediate the incident")
+            col4.error("Please select an incident to auto-remediate the incident")
             return
-        with col5.status("Remediating incident..."):
+        with col4.status("Remediating incident..."):
             incident = incident_remediate(pk,description)
-            col5.markdown("***Status of auto remediation for " + pk + "***")
-            col5.info(incident['result'], icon="ℹ️")            
+            col4.markdown("***Status of auto remediation for " + pk + "***")
+            col4.json(incident['result'])
+

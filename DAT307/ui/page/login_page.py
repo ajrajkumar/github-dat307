@@ -3,7 +3,8 @@ from utils.cognito_handler import authenticate_user
 
 # Pages
 def login_page():
-    st.set_page_config(page_title="DAT307-IDR: User Login", layout="wide")
+    #st.set_page_config(page_title="DAT307-IDR: User Login", layout="wide")
+    st.set_page_config(page_title="DAT307-IDR: User Login")
     st.image("image/aws_logo.png",width=120)
     st.header("DAT307 - Build a Generative AI incident detection and response system powered by Amazon Aurora")
     with st.empty().container(border=True):
@@ -17,7 +18,7 @@ def login_page():
         with col2:
             st.title("Login Page")
             email = st.text_input("E-mail",value="test1@test.com")
-            password = st.text_input("Password", type="password",value="Goodluck@76")
+            password = st.text_input("Password", type="password",value="IDR@dat307")
 
             if st.button("Login"):
                 if not (email and password):

@@ -68,13 +68,14 @@ def lambda_handler(event, context):
     username, password, host, dbname = get_db_credentials(secret_name, region_name)
     
     if workload_type == 'CPU':
+        print(f"Running CPU workload simulation for {host} with time interval of {duration_seconds} seconds")
         with psycopg2.connect( host=host, user=username, password=password, dbname=dbname) as connection:
             with connection.cursor() as cursor:
                 cursor.execute("drop table if exists cpustresstest;")
                 cursor.execute("create table if not exists cpustresstest(id bigint primary key, col2 text);")
                 cursor.execute("select count(1) from cpustresstest;")
                 res = cursor.fetchone()
-                print (res)
+                #print (res)
                 if int(res[0]) <= 0:
                     cursor.execute("insert into cpustresstest select r, 'test '||r from generate_series(1, 100) r;")
                     cursor.execute("analyze cpustresstest;")
@@ -88,19 +89,20 @@ def lambda_handler(event, context):
             for future in futures:
                 future.result()  # Wait for all threads to complete
     elif workload_type == 'IO':
+        print(f"Running IO workload simulation for {host} with time interval of {duration_seconds} seconds")
         # pgbench -U postgres -i -s 20000 postgres -h rdspg1.cv2iwqsmwf4q.us-west-2.rds.amazonaws.com -U postgres -d postgres -p 5432
         # pgbench -U postgres -c 265 -j 65 -T 6000 -S postgres -p 5436
         os.environ['PGPASSWORD'] = password
-        p = subprocess.Popen("/usr/bin/pgbench -i -s 2000 -h {} -U postgres -d postgres -p 5432".format(host), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in p.stdout.readlines():
-            print (line)
+        p = subprocess.Popen("/usr/bin/pgbench -i -n -s 100 -h {} -U postgres -d postgres -p 5432".format(host), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        #for line in p.stdout.readlines():
+            #print (line)
         retval = p.wait()
-        print (retval)
-        p = subprocess.Popen("/usr/bin/pgbench -c 265 -j 65 -T {} -h {} -U postgres -d postgres -p 5432".format(duration_seconds, host), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in p.stdout.readlines():
-            print (line)
+        #print (retval)
+        p = subprocess.Popen("/usr/bin/pgbench -c 10 -j 5 -T {} -h {} -U postgres -d postgres -p 5432".format(duration_seconds, host), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        #for line in p.stdout.readlines():
+            #print (line)
         retval = p.wait()        
-        print (retval)
+        #print (retval)
     elif workload_type == 'CONN':
         with psycopg2.connect( host=host, user=username, password=password, dbname=dbname) as connection:
             with connection.cursor() as cursor:

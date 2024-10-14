@@ -15,8 +15,11 @@ def get_incidents(incidentStatus):
     try:
        response = requests.get(url,params={"incidentStatus": incidentStatus}, headers = headers)
        response.raise_for_status()
-       print(response.json())
-       return response.json()
+       items = response.json()['Items']
+       if len(items) == 0 :
+           print("No incidents available")
+
+       return response.json()['Items']
     except requests.exceptions.RequestException as e:
        print (f"Error in calling /alerts API: {e}")
        return None

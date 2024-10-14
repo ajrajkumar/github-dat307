@@ -47,17 +47,22 @@ def simple_agent_invoke(input_text):
                 # End event indicates that the request finished successfully
             elif 'trace' in event:
                 a = event['trace']
+                log_data = True
                 try:
-                    a['trace']['preProcessingTrace']['modelInvocationInput']['text'] = "TEXT"
+                    dummy = a['trace']['orchestrationTrace']['rationale']
                 except KeyError:
-                    pass          
-                try:
-                    a['trace']['orchestrationTrace']['modelInvocationInput']['text'] = "TEXT"
-                except KeyError:
-                    pass
-                logger.info(json.dumps(a, indent=2))
-                output.append(a)
-                logger.info("\n=====================================================================================\n")
+                    try:
+                        dummy = a['trace']['orchestrationTrace']['observation']
+                    except KeyError:
+                        try:
+                            dummy = a['trace']['orchestrationTrace']['invocationInput']
+                        except KeyError:
+                            log_data = False
+                            
+                if log_data:
+                    logger.info(json.dumps(a['trace'], indent=2))
+                    output.append(a['trace'])
+                    logger.info("\n=====================================================================================\n")
             else:
                 raise Exception("unexpected event.", event)
         return output 
@@ -103,4 +108,5 @@ def lambda_handler(event, context):
         }
     }   
     
+
 
