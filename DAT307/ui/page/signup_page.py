@@ -17,6 +17,16 @@ def input_field(input_param, type):
 
 def signup_page():
     st.set_page_config(page_title="DAT307-IDR: User Registration", layout="wide")
+    st.markdown("""
+        <style>
+               .block-container {
+                    padding-top: 1rem;
+                    padding-bottom: 0rem;
+                    padding-left: 5rem;
+                    padding-right: 5rem;
+                }
+        </style>
+        """, unsafe_allow_html=True)
     
     """Render the signup page with optional extra input parameters and password confirmation."""
     if st.session_state['verifying']:
