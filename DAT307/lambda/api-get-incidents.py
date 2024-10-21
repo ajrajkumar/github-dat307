@@ -20,9 +20,15 @@ def lambda_handler(event, context):
     print(f"Getting the DynamoDB table {tableName}  content for incidentStatus {incidentStatus}")
 
     # Getting the incidents for the sort key ("I")
-    response = table.scan(
-        FilterExpression=Attr('incidentStatus').eq(incidentStatus) & Attr('sk').eq('I')
-    )
+
+    if incidentStatus == "all":
+        response = table.scan(
+            FilterExpression=Attr('sk').eq('I')
+        )
+    else:
+        response = table.scan(
+            FilterExpression=Attr('incidentStatus').eq(incidentStatus) & Attr('sk').eq('I')
+        )
     print (response)
     return {
         'statusCode': '200',
@@ -31,5 +37,3 @@ def lambda_handler(event, context):
             'Content-Type': 'application/json',
         }
     }
-    
-    
