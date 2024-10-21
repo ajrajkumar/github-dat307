@@ -3,6 +3,8 @@ from utils.apigw_handler import get_incidents, get_runbook, incident_remediate
 from utils.init_session import reset_session
 import pandas as pd
 import json
+from datetime import datetime as dt
+
 
 def get_kpi(iconname, metricname, metricvalue):
     wch_colour_box = (0,204,102)
@@ -69,15 +71,17 @@ def pending_incident_page():
         st.sidebar.image("image/powered_by_aws.png",width=120)  
 
 
-    st.title("Pending incidents")
-    st.subheader("Metric Summary", divider=True)
+    st.title(":orange[Pending incidents] ")
+    st.subheader(f":orange[Metric Summary as of] :blue[{dt.now().now().strftime("%Y-%m-%d %H:%M:%S")}] ", divider=True)
+
     col1, col2, col3 = st.columns(3)
     col1.markdown(get_kpi("fa-solid fa-circle-exclamation","Total Pending Incidents",eventCount), unsafe_allow_html=True)
     col2.markdown(get_kpi("fa-solid fa-server","Total Unique Instance",instanceCount), unsafe_allow_html=True)
     col3.markdown(get_kpi("fa-solid fa-bell","Total Unique Alert Type",alertTypeCount), unsafe_allow_html=True)
     
     col4, col5 = st.columns([3,1])
-    col4.markdown("#### Incident Summary")
+    col4.markdown("### :orange[Incident Summary] ")
+
     col4.write("Here are the list of active incidents")
     col4.write("Please select an incident to process by clicking the first column of the row")
     
@@ -98,10 +102,13 @@ def pending_incident_page():
     )
     #col4.markdown("#### Event Details")
     #col4.divider()
-    col5.markdown("#### User Action")
+    #col5.markdown("#### User Action")
+    col5.markdown("### :orange[User Action] ")
+
     col5.write("Here are the actions that requires manual user intervention")
     runbook_action = col5.button("Get Runbook")
     remediate_action = col5.button("Remediate Incident")
+
     col5.divider()
     rows = event['selection']['rows']
     pk = None
