@@ -112,7 +112,7 @@ function configure_env()
     export KB_IDR_S3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBIDRS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
     export KB_QA_S3=$(aws cloudformation describe-stacks --query "Stacks[].Outputs[?(OutputKey == 'KBQAS3SourceBucketName')][].{OutputValue:OutputValue}" --output text)
 
-    export C9_URL="https://${C9_PID}.vfs.cloud9.$AWS_REGION.amazonaws.com/"
+    export C9_URL="https://\${C9_PID}.vfs.cloud9.${AWS_REGION}.amazonaws.com/"
 
     # Persist values in future terminals
     echo "export PGUSER=$PGUSER" >> /home/ec2-user/.bashrc
